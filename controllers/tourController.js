@@ -82,16 +82,19 @@ exports.updateTour = async (req, res) => {
       message: `Can't find out any tour with id = ${id}`,
     });
   }
-  // const tour = tours.find((el) => el.id === id * 1);
-  // if (!tour) {
-  //   res.status(404).json({
-  //     state: 'Fail',
-  //     message: `Can't find out any tour with id = ${id}`,
-  //   });
-  // } else {
-  //   res.status(200).json({
-  //     state: 'success',
-  //     tour,
-  //   });
-  // }
+};
+
+exports.deleteTour = async (req, res) => {
+  try {
+    await TourModel.deleteTour(req.params.id);
+    res.status(200).json({
+      state: 'success',
+      data: null,
+    });
+  } catch (error) {
+    res.status(200).json({
+      state: 'success',
+      data: null,
+    });
+  }
 };
