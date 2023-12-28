@@ -21,6 +21,12 @@ exports.checkBody = (req, res, next) => {
   }
   next();
 };
+
+exports.getTop5Tours = (req, res, next) => {
+  req.query.limit = 5; //5 tour
+  req.query.sort = '-ratingsAverage,price';
+  next();
+};
 exports.getAllTours = async (req, res) => {
   try {
     //1, lấy query object từ request
