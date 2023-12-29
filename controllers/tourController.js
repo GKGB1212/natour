@@ -46,6 +46,37 @@ exports.getAllTours = async (req, res) => {
     });
   }
 };
+//hàm thống kê tour
+exports.getTourStats = async (req, res) => {
+  try {
+    const query = TourModel.aggregate([
+      {
+        $match: {
+          ratingsAverage: { $gte: 4.5 },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          avgRating: { $avg: '$ratingsAverage' },
+          avgPrice: { $avg: '$price' },
+          maxPrice: { $max: '$price' },
+          minPrice: { $min: '$price' },
+        },
+      },
+    ]);
+    const stats = await await query;
+    res.status(200).json({
+      state: 'success',
+      stats,
+    });
+  } catch (error) {
+    res.status(404).json({
+      state: 'Fail',
+      message: error,
+    });
+  }
+};
 exports.getTour = async (req, res) => {
   const { id } = req.params;
   try {
