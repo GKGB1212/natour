@@ -92,18 +92,18 @@ tourSchema.virtual('durationWeeks').get(function () {
 // document middleware for save, update
 tourSchema.pre('save', function (next) {
   //next là function dùng để nhảy đến middleware tiếp theo
-  console.log('hello form middware mongoose', this);
+  //console.log('hello form middware mongoose', this);
   this.slug = 'Này là trường được thêm từ mongoose middleware';
   next();
 });
 
 tourSchema.pre('save', function (next) {
-  console.log('hàm này là hàm thứ2');
+  //console.log('hàm này là hàm thứ2');
   next();
 });
 
 tourSchema.post('save', function (document, next) {
-  console.log('Hello from post middleware', document);
+  // console.log('Hello from post middleware', document);
   next();
 });
 
@@ -113,8 +113,19 @@ tourSchema.pre(/^find/, function (next) {
   this.start = Date.now();
   next();
 });
-tourSchema.pre(/^find/, function (next) {
-  console.log(`Query took ${Date.now() - this.start} milliseconds!`);
+tourSchema.post(/^find/, function (docs, next) {
+  //console.log(`Query took ${Date.now() - this.start} milliseconds!`);
+  next();
+});
+//AGGREGATE MIDDLEWARE
+tourSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({
+    $match: { secretTour: { $ne: true } },
+  });
+  next();
+});
+tourSchema.pre('aggregate', function (next) {
+  console.log(this.pipeline());
   next();
 });
 const TourModel = mongoose.model('tour', tourSchema);
