@@ -72,6 +72,11 @@ const tourSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    slug: String,
+    secretTour: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     toJSON: { virtuals: true },
@@ -82,6 +87,35 @@ const tourSchema = mongoose.Schema(
 //vitual fields
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
+});
+
+// document middleware for save, update
+tourSchema.pre('save', function (next) {
+  //next là function dùng để nhảy đến middleware tiếp theo
+  console.log('hello form middware mongoose', this);
+  this.slug = 'Này là trường được thêm từ mongoose middleware';
+  next();
+});
+
+tourSchema.pre('save', function (next) {
+  console.log('hàm này là hàm thứ2');
+  next();
+});
+
+tourSchema.post('save', function (document, next) {
+  console.log('Hello from post middleware', document);
+  next();
+});
+
+//QUERY MIDDLEWARE
+tourSchema.pre(/^find/, function (next) {
+  this.find({ secretTour: { $ne: true } });
+  this.start = Date.now();
+  next();
+});
+tourSchema.pre(/^find/, function (next) {
+  console.log(`Query took ${Date.now() - this.start} milliseconds!`);
+  next();
 });
 const TourModel = mongoose.model('tour', tourSchema);
 
