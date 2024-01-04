@@ -36,5 +36,26 @@ app.patch('/api/v1/tours/:id', updateTour);
 //3, router
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+app.all('*', (req, res, next) => {
+  // res.status(400).json({
+  //   error: true,
+  //   message: `Can't find ${req.originalUrl} on this server`,
+  // });
+  console.log('da vao');
+  const err = new Error(`Can't find ${req.originalUrl} on this server`);
+  err.status = 'fail';
+  err.statusCode = 400;
+  next(err);
+});
 
+app.use((error, req, res, next) => {
+  console.log('da vao1', error);
+  error.statusCode = error.statusCode || 500;
+  error.status = error.status || 'error';
+
+  res.status(error.statusCode).json({
+    status: error.status,
+    message: error.message,
+  });
+});
 module.exports = app;
