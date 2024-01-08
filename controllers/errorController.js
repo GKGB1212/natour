@@ -1,8 +1,18 @@
 const CustomError = require('../ultils/CustomError');
 
 const handleCastErrorDB = (error) => {
-  const message = `Invalid ${path}:${value}`;
+  const message = `Invalid ${error.path}:${error.value}`;
   return new CustomError(message, 404);
+};
+const handleDuplicateFieldsDB = (error) => {
+  const value = error.message.match(/(["'])(\\?.)*?\1/)[0];
+  const message = `Duplicate field value: ${value}. Please use another value!`;
+  return new CustomError(message, 400);
+};
+const handleValidationErrorDB = (error) => {
+  const errors = Object.values(error.errors).map((el) => el.message);
+  const message = errors.join(', ');
+  return new CustomError(message, 400);
 };
 const sendErrorDev = (res, error) => {
   res.status(error.statusCode).json({
@@ -30,17 +40,18 @@ const sendErrorPro = (res, error) => {
     });
   }
 };
-module.exports = (error, req, res, next) => {
-  error.statusCode = error.statusCode || 500;
-  error.status = error.status || 'error';
-
+module.exports = (err, req, res, next) => {
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || 'error';
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(res, error);
-  } else if (process.env.NODE_ENV === 'production') {
-    let err = { ...error };
-    if ((error.name = 'CastError')) {
-      err = handleCastErrorDB(err);
-    }
-    sendErrorPro(res, err);
+    sendErrorDev(res, err);
+  } else {
+    let error;
+    if (err.name === 'CastError') error = handleCastErrorDB(err);
+    if (err.code === 11000) error = handleDuplicateFieldsDB(err);
+    //invalid field value
+    if (err.name == 'ValidationError') error = handleValidationErrorDB(err);
+    if (error) sendErrorPro(res, error);
+    else sendErrorDev(res, err);
   }
 };

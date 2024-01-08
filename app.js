@@ -28,11 +28,14 @@ app.use((req, res, next) => {
 //3, router
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+
 app.all('*', (req, res, next) => {
   next(new CustomError(`Can't find ${req.originalUrl} on this server`, 404));
 });
+
 //thêm middleware xử lí lỗi
 app.use(globalErrorHandler);
+
 module.exports = app;
 
 /*
