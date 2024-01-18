@@ -14,6 +14,10 @@ const handleValidationErrorDB = (error) => {
   const message = errors.join(', ');
   return new CustomError(message, 400);
 };
+const handleJsonWebTokenError = () =>
+  new CustomError('Token is invalid, please login and try again', 401);
+const handleTokenExpiredError = () =>
+  new CustomError('Token is expried, please login and try again', 401);
 const sendErrorDev = (res, error) => {
   res.status(error.statusCode).json({
     status: error.status,
@@ -41,6 +45,7 @@ const sendErrorPro = (res, error) => {
   }
 };
 module.exports = (err, req, res, next) => {
+  console.log('ôtke', err.name);
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
   if (process.env.NODE_ENV === 'development') {
@@ -50,7 +55,9 @@ module.exports = (err, req, res, next) => {
     if (err.name === 'CastError') error = handleCastErrorDB(err);
     if (err.code === 11000) error = handleDuplicateFieldsDB(err);
     //invalid field value
-    if (err.name == 'ValidationError') error = handleValidationErrorDB(err);
+    if (err.name === 'ValidationError') error = handleValidationErrorDB(err);
+    if (err.name === 'JsonWebTokenError') error = handleJsonWebTokenError(err);
+    if (err.name === 'TokenExpiredError') error = handleTokenExpiredError(err);
     if (error) sendErrorPro(res, error);
     else sendErrorDev(res, err);
   }
