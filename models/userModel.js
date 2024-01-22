@@ -18,6 +18,7 @@ const userSchema = mongoose.Schema({
     type: String,
     required: [true, 'Please provide a password'],
     minLength: 8,
+    select: false, //nếu set bằng false thì mongoose tự động sẽ k select lên
   },
   passwordConfirm: {
     type: String,
@@ -33,15 +34,19 @@ const userSchema = mongoose.Schema({
   passwordChangeAt: Date,
 });
 userSchema.pre('save', async function (next) {
-  console.log('oallala', this.isModified('password'));
   if (!this.isModified('password')) {
     return next();
   }
+  //mã hóa lại mật khẩu
   this.password = await brcypt.hash(this.password, 12);
   //sau khi xác nhận rồi thì passwordConfirm không còn ý nghĩa nữa nên set thành undefined
   this.passwordConfirm = undefined;
   next();
 });
+userSchema.methods.checkCorrectPassword = async function (candidatePassword, userPassword) {
+  //cần phải truyền userPassword
+  return await brcypt.compare(candidatePassword, userPassword);
+};
 userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   if (this.passwordChangeAt) {
     const changeAt = parseInt(this.passwordChangeAt.getTime() / 1000, 10);
