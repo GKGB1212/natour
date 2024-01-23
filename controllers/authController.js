@@ -84,6 +84,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   next();
 });
 
+//Kiểm tra có quyền để thực hiện hành động không
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
     //roles ['admin','lead-guide]
@@ -96,3 +97,16 @@ exports.restrictTo = (...roles) => {
     next();
   };
 };
+
+//Gửi mã token để reset lại password
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  //1. Get user based on POSTed email
+  const user = await UserModel.findOne({ email: req.body.email });
+  if (!user) {
+    return next(new CustomError('There is no user with email address', 404));
+  }
+  //2. Generate the random reset token
+  const resetToken = user.createResetPasswordToken();
+  await user.save({ validateBeforeSave: false }); //thêm option validateBeforeSave để userSchema khỏi check validate dữ liệu trước khi lưu nếu không lẽ báo lỗi vì ở đây save không đủ trường
+  //3. Send it to user's email
+});
