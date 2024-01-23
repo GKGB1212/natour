@@ -3,6 +3,7 @@ const catchAsync = require('../ultils/CatchAsync');
 const jwt = require('jsonwebtoken');
 const CustomError = require('../ultils/CustomError');
 const { token } = require('morgan');
+const sentEmail = require('../ultils/Email1');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -109,4 +110,27 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   const resetToken = user.createResetPasswordToken();
   await user.save({ validateBeforeSave: false }); //thêm option validateBeforeSave để userSchema khỏi check validate dữ liệu trước khi lưu nếu không lẽ báo lỗi vì ở đây save không đủ trường
   //3. Send it to user's email
+  const resetURL = `${req.protocol}//${req.get(
+    'host'
+  )}/api/v1/users/resetPassword/${resetToken}`;
+  const message = `Forgot your password. Submit PATCH request with your new password and password confirm to: ${resetURL}. If you didn't forget your password, please ignore this email!!!`;
+  try {
+    await sentEmail({
+      email: user.email,
+      subject: 'Your password reset token (valid in 10 min)',
+      message,
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Token sent to email!',
+    });
+  } catch (err) {
+    user.passwordResetExpires = undefined;
+    user.passwordResetToken = undefined;
+    user.save({ validateBeforeSave: false });
+    return next(
+      new CustomError('There was an error sending email. Try again!', 500)
+    );
+  }
 });
