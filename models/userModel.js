@@ -51,6 +51,14 @@ userSchema.pre('save', async function (next) {
   this.passwordConfirm = undefined;
   next();
 });
+//cập nhật trường passwordChangeAt nếu thay đổi mật khẩu
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) {
+    return next();
+  }
+  this.passwordChangeAt = Date.now() + 1000;
+  next();
+});
 userSchema.methods.checkCorrectPassword = async function (
   candidatePassword,
   userPassword
