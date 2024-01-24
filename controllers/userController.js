@@ -19,19 +19,7 @@ exports.getAllUsers = async (req, res) => {
     users: users,
   });
 };
-exports.getUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined!',
-  });
-};
-exports.createUser = (req, res) => {
-  res.status(500).json({
-    status: 'error',
-    message: 'This route is not yet defined!',
-  });
-};
-exports.updateUser = CatchAsync(async (req, res, next) => {
+exports.updateMe = CatchAsync(async (req, res, next) => {
   //1.Create error if user POSTed password data
   if (req.body.password) {
     return next(
@@ -54,6 +42,31 @@ exports.updateUser = CatchAsync(async (req, res, next) => {
     data: currentUser,
   });
 });
+exports.deleteMe = CatchAsync(async (req, res) => {
+  await UserModel.findByIdAndUpdate(req.user.id, { active: false });
+  res.status(200).json({
+    status: 'success',
+    data: null,
+  });
+});
+exports.getUser = (req, res) => {
+  res.status(500).json({
+    status: 'error',
+    message: 'This route is not yet defined!',
+  });
+};
+exports.createUser = (req, res) => {
+  res.status(500).json({
+    status: 'error',
+    message: 'This route is not yet defined!',
+  });
+};
+exports.updateUser = (req, res) => {
+  res.status(500).json({
+    status: 'error',
+    message: 'This route is not yet defined!',
+  });
+};
 exports.deleteUser = (req, res) => {
   res.status(500).json({
     status: 'error',

@@ -40,6 +40,11 @@ const userSchema = mongoose.Schema({
   passwordChangeAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 userSchema.pre('save', async function (next) {
   //chỉ mã hóa mật khẩu khi mật khẩu thay đổi
@@ -59,6 +64,10 @@ userSchema.pre('save', function (next) {
     return next();
   }
   this.passwordChangeAt = Date.now() + 1000;
+  next();
+});
+userSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
   next();
 });
 userSchema.methods.checkCorrectPassword = async function (
