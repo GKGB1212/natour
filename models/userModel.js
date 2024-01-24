@@ -42,6 +42,8 @@ const userSchema = mongoose.Schema({
   passwordResetExpires: Date,
 });
 userSchema.pre('save', async function (next) {
+  //chỉ mã hóa mật khẩu khi mật khẩu thay đổi
+  console.log(this.isModified('password'));
   if (!this.isModified('password')) {
     return next();
   }

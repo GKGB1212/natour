@@ -11,16 +11,20 @@ const signToken = (id) => {
     expiresIn: '90 d',
   });
 };
-exports.signUp = catchAsync(async (req, res, next) => {
-  const newUser = await UserModel.create(req.body);
-  const token = signToken(newUser._id);
-  res.status(200).json({
+
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  res.status(statusCode).json({
     status: 'success',
     token: token,
     data: {
-      user: newUser,
+      user: user,
     },
   });
+};
+exports.signUp = catchAsync(async (req, res, next) => {
+  const newUser = await UserModel.create(req.body);
+  createSendToken(newUser, 200, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -31,7 +35,9 @@ exports.login = catchAsync(async (req, res, next) => {
   }
   //2.Kiểm tra xem người dùng có trong db không
   const currentUser = await UserModel.findOne({ email }).select('+password'); //phải thêm dấu + trước password bởi vì trong schema user ta đã khai báo slect:false với trường password
-  console.log(password, currentUser.password);
+  if (!currentUser) {
+    return next(new CustomError('There is no user with email address', 404));
+  }
   const match = await currentUser.checkCorrectPassword(
     password,
     currentUser.password
@@ -40,11 +46,7 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new CustomError('Incorrect password or email!!!', 401));
   }
   //3. Tạo token và trả về người dùng
-  let token = signToken(currentUser._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createSendToken(currentUser, 200, res);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -157,8 +159,28 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   user.passwordResetToken = undefined;
   await user.save();
   //4.return JWT
-  res.status(200).json({
-    state: 'success',
-    token: signToken(user._id),
-  });
+  createSendToken(user, 200, res);
+});
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  //1.find user
+  const user = await UserModel.findById(req.user._id).select('+password');
+  //2.check if POSTed current password is correct
+  const match = await user.checkCorrectPassword(
+    req.body.currentPassword,
+    user.password
+  );
+  if (!match) {
+    return next(
+      new CustomError('Your current password is wrong, please try again!')
+    );
+  }
+  //3. if so, update password
+  user.password = req.body.newPassword;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordChangeAt = Date.now();
+  await user.save();
+  //Không dùng findbyidandUpdate thì như vậy nó sẽ skip qua các validator
+  //4.Log user in, send jwt
+  createSendToken(user, 200, res);
 });
