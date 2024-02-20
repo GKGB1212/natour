@@ -15,6 +15,14 @@ const app = express();
 //set security HTTP header
 app.use(helmet());
 
+//Limit requests from same API
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 phút
+  max: 2, // Số lượng yêu cầu tối đa trong khoảng thời gian trên
+  message: 'Too many request from this IP, please try again in 15 minutes!',
+});
+app.use('/api', limiter);
+
 //thêm middleware để parse body của request
 app.use(express.json({ limit: '10KB' }));
 
@@ -28,14 +36,6 @@ app.use(xss());
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
-
-//Limit requests from same API
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 phút
-  max: 2, // Số lượng yêu cầu tối đa trong khoảng thời gian trên
-  message: 'Too many request from this IP, please try again in 15 minutes!',
-});
-app.use('/api', limiter);
 
 app.use((req, res, next) => {
   console.log('Hello from the middleware 👋');

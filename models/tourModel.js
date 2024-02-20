@@ -73,10 +73,31 @@ const tourSchema = mongoose.Schema(
       default: false,
     },
     slug: String,
-    secretTour: {
-      type: Boolean,
-      default: false,
+    startLocation: {
+      //GeoJSON
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number], //tọa độ địa lí gồm 2 điểm kinh độ vĩ độ.
+      address: String,
+      description: String,
     },
+    locations: [
+      {
+        //GeoJSON
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number], //tọa độ địa lí gồm 2 điểm kinh độ vĩ độ.
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
