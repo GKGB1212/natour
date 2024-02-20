@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const User = require('./userModel');
 
 const tourSchema = mongoose.Schema(
   {
@@ -98,6 +99,7 @@ const tourSchema = mongoose.Schema(
         day: Number,
       },
     ],
+    guides: Array,
   },
   {
     toJSON: { virtuals: true },
@@ -110,7 +112,13 @@ tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
-// document middleware for save, update
+tourSchema.pre('save', async function (next) {
+  const guidesPromise = this.guides.map(async (id) => await User.findById(id));
+  this.guides = await Promise.all(guidesPromise);
+  next();
+});
+
+/*// document middleware for save, update
 tourSchema.pre('save', function (next) {
   //next là function dùng để nhảy đến middleware tiếp theo
   //console.log('hello form middware mongoose', this);
@@ -126,7 +134,7 @@ tourSchema.pre('save', function (next) {
 tourSchema.post('save', function (document, next) {
   // console.log('Hello from post middleware', document);
   next();
-});
+});*/
 
 //QUERY MIDDLEWARE
 tourSchema.pre(/^find/, function (next) {
