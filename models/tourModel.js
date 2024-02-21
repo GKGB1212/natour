@@ -99,7 +99,12 @@ const tourSchema = mongoose.Schema(
         day: Number,
       },
     ],
-    guides: Array,
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
@@ -112,12 +117,13 @@ tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
-tourSchema.pre('save', async function (next) {
+//Hàm embedd user vào tour document
+/*tourSchema.pre('save', async function (next) {
   const guidesPromise = this.guides.map(async (id) => await User.findById(id));
   this.guides = await Promise.all(guidesPromise);
   next();
 });
-
+*/
 /*// document middleware for save, update
 tourSchema.pre('save', function (next) {
   //next là function dùng để nhảy đến middleware tiếp theo
@@ -137,6 +143,10 @@ tourSchema.post('save', function (document, next) {
 });*/
 
 //QUERY MIDDLEWARE
+tourSchema.pre(/^find/, function (next) {
+  this.populate('guides');
+  next();
+});
 tourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
   this.start = Date.now();
